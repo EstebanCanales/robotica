@@ -2,26 +2,28 @@
 Aplicación principal.
 """
 import os
+import json
 import logging
-from fastapi import FastAPI
+from fastapi import FastAPI, Depends, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+import requests
 
-from app.api.routes import router
-from app.db.manager import DatabaseManager
+from app.db.manager import DBManager
 from app.ai.ollama_client import OllamaClient
+from app.api.routes import router
 
 # Configuración de logging
 logging.basicConfig(
     level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
 )
 logger = logging.getLogger(__name__)
 
-# Crear aplicación FastAPI
+# Inicializar la aplicación FastAPI
 app = FastAPI(
-    title="Robotica Data Analysis API",
-    description="API para análisis de datos de sensores de robótica",
-    version="1.0.0",
+    title="API de Análisis de Datos de Sensores",
+    description="API para procesar datos de sensores agrícolas y generar análisis con modelos de IA",
+    version="1.0.0"
 )
 
 # Configurar CORS
@@ -33,44 +35,40 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Incluir router de la API
+# Incluir router
 app.include_router(router)
 
-# Modelo a utilizar
-MODEL = os.getenv("OLLAMA_MODEL", "gemma3:4b")
-
+# Instancias globales
+db_manager = DBManager()
+ollama_client = OllamaClient()
+DEFAULT_MODEL = os.getenv("OLLAMA_MODEL", "gemma3:4b")
 
 @app.on_event("startup")
 async def startup_event():
-    """Inicializar la aplicación."""
-    try:
-        # Inicializar la base de datos
-        logger.info("Inicializando la base de datos...")
-        db_manager = DatabaseManager()
-        db_manager.setup_database()
-        
-        # Verificar y descargar el modelo si es necesario
-        logger.info(f"Verificando si el modelo {MODEL} está disponible...")
-        ollama_client = OllamaClient(model=MODEL)
-        
-        # Intentar obtener lista de modelos disponibles
-        models_info = ollama_client.get_models()
-        models = [model.get("name") for model in models_info.get("models", [])]
-        
-        if MODEL not in models:
-            logger.info(f"Modelo {MODEL} no encontrado. Iniciando descarga...")
-            success = ollama_client.pull_model()
-            if success:
-                logger.info(f"Modelo {MODEL} descargado correctamente")
-            else:
-                logger.error(f"No se pudo descargar el modelo {MODEL}")
-        else:
-            logger.info(f"Modelo {MODEL} ya está disponible")
-            
-        logger.info("Aplicación inicializada correctamente")
-    except Exception as e:
-        logger.error(f"Error al inicializar la aplicación: {str(e)}")
+    """Configuración inicial al iniciar la aplicación."""
+    logger.info("Inicializando la base de datos...")
+    db_manager.setup_database()
+    
+    # Verificar si el modelo está disponible
+    logger.info(f"Verificando si el modelo {DEFAULT_MODEL} está disponible...")
+    models = ollama_client.get_models()
+    logger.info(f"Modelos disponibles: {models}")
+    
+    if DEFAULT_MODEL in models:
+        logger.info(f"Modelo {DEFAULT_MODEL} encontrado en la lista de modelos")
+    else:
+        logger.info(f"Modelo {DEFAULT_MODEL} no encontrado. Por favor, descárgalo manualmente.")
+        logger.info(f"Puede usar: 'ollama pull {DEFAULT_MODEL}' en la máquina host")
+    
+    logger.info("Aplicación inicializada correctamente")
 
+@app.on_event("shutdown")
+async def shutdown_event():
+    """Limpieza al detener la aplicación."""
+    logger.info("Cerrando conexiones...")
+    # Cerrar cualquier conexión pendiente si es necesario
+    
+    logger.info("Aplicación detenida correctamente")
 
 if __name__ == "__main__":
     import uvicorn
