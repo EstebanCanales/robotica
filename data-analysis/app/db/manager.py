@@ -205,4 +205,37 @@ class DBManager:
                 return None
         except Exception as e:
             logger.error(f"Error al obtener resultado de análisis: {str(e)}")
-            raise Exception(f"Error al obtener resultado de análisis: {str(e)}") 
+            raise Exception(f"Error al obtener resultado de análisis: {str(e)}")
+    
+    def get_sensor_records(self, limit: int = 5) -> List[Dict[str, Any]]:
+        """
+        Obtener registros de datos de sensores.
+        
+        Args:
+            limit: Número máximo de registros a obtener
+            
+        Returns:
+            Lista de registros de sensores
+        """
+        try:
+            cursor = self.conn.cursor()
+            cursor.execute("""
+                SELECT id, timestamp, data as raw_data
+                FROM sensor_data
+                ORDER BY id DESC
+                LIMIT ?
+            """, (limit,))
+            
+            records = []
+            for row in cursor.fetchall():
+                records.append({
+                    "id": row[0],
+                    "timestamp": row[1],
+                    "raw_data": row[2]
+                })
+                
+            logger.info(f"Obtenidos {len(records)} registros de datos de sensores")
+            return records
+        except Exception as e:
+            logger.error(f"Error al obtener registros de sensores: {str(e)}")
+            raise Exception(f"Error al obtener registros de sensores: {str(e)}") 

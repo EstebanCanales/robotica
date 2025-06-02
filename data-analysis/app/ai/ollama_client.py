@@ -10,143 +10,110 @@ from typing import Dict, Any, List, Optional
 
 logger = logging.getLogger(__name__)
 
-class OllamaClient:
-    """Cliente para interactuar con la API de Ollama."""
+class OllamaClientSingleton:
+    """Implementación Singleton del cliente de Ollama para mantener estado entre llamadas"""
     
-    def __init__(self, host=None, model=None):
+    _instance = None
+    
+    def __new__(cls):
+        if cls._instance is None:
+            cls._instance = super(OllamaClientSingleton, cls).__new__(cls)
+            # Inicialización al crear la instancia
+            cls._instance._model = os.getenv("OLLAMA_MODEL", "gemma3:4b")
+            cls._instance._base_url = os.getenv("OLLAMA_HOST", "http://localhost:11434")
+        return cls._instance
+
+class OllamaClient:
+    """Cliente para interactuar con Ollama"""
+    
+    _singleton = OllamaClientSingleton()
+    
+    @property
+    def model(self) -> str:
+        """Obtener el modelo actual"""
+        return self._singleton._model
+    
+    @model.setter
+    def model(self, value: str) -> None:
+        """Establecer el modelo actual y guardarlo"""
+        self._singleton._model = value
+        logger.info(f"Modelo cambiado a {value}")
+    
+    def get_response(self, prompt: str) -> str:
         """
-        Inicializar el cliente de Ollama.
+        Obtener respuesta de Ollama para un prompt dado
         
         Args:
-            host: URL del servidor de Ollama
-            model: Modelo a utilizar
+            prompt: Texto del prompt para el modelo
+            
+        Returns:
+            Respuesta generada por el modelo
         """
-        self.host = host or os.getenv("OLLAMA_HOST", "http://host.docker.internal:11434")
-        self.model = model or os.getenv("OLLAMA_MODEL", "gemma3:4b")
-        self.api_url = f"{self.host}/api"
-        
-        logger.info(f"Cliente Ollama inicializado con host={self.host}, modelo={self.model}")
+        try:
+            url = f"{self._singleton._base_url}/api/generate"
+            
+            # Datos de la solicitud
+            data = {
+                "model": self.model,
+                "prompt": prompt,
+                "stream": False
+            }
+            
+            logger.info(f"Enviando prompt a Ollama (modelo: {self.model})")
+            
+            # Realizar solicitud a Ollama
+            response = requests.post(url, json=data, timeout=120)  # Timeout extendido para modelos grandes
+            response.raise_for_status()
+            
+            result = response.json()
+            
+            if 'response' in result:
+                logger.info(f"Respuesta recibida de Ollama ({len(result['response'])} caracteres)")
+                return result['response']
+            else:
+                logger.error(f"Respuesta de Ollama no contiene campo 'response': {result}")
+                return "Error: Respuesta inesperada del modelo."
+                
+        except requests.RequestException as e:
+            logger.error(f"Error al comunicarse con Ollama: {str(e)}")
+            raise Exception(f"Error de comunicación con Ollama: {str(e)}")
+        except Exception as e:
+            logger.error(f"Error al obtener respuesta de Ollama: {str(e)}")
+            raise Exception(f"Error al procesar respuesta de Ollama: {str(e)}")
     
     def get_models(self) -> List[str]:
         """
-        Obtener la lista de modelos disponibles.
+        Obtener lista de modelos disponibles en Ollama
         
         Returns:
             Lista de nombres de modelos
         """
         try:
-            response = requests.get(f"{self.api_url}/tags")
-            data = response.json()
-            models = [model['name'] for model in data.get('models', [])]
-            logger.info(f"Modelos disponibles: {len(models)} modelos")
-            return models
-        except Exception as e:
-            logger.error(f"Error al obtener modelos: {str(e)}")
-            return []
-    
-    def get_response(self, prompt: str, params: Optional[Dict[str, Any]] = None) -> str:
-        """
-        Obtener respuesta del modelo.
-        
-        Args:
-            prompt: Prompt para enviar al modelo
-            params: Parámetros adicionales para la generación
+            url = f"{self._singleton._base_url}/api/tags"
             
-        Returns:
-            Respuesta del modelo
-        """
-        if not prompt:
-            logger.error("Prompt vacío")
-            return "Error: El prompt no puede estar vacío"
-        
-        default_params = {
-            "model": self.model,
-            "prompt": prompt,
-            "stream": False,
-            "temperature": 0.7,
-            "top_p": 0.9,
-            "top_k": 50,
-            "max_tokens": 2048
-        }
-        
-        # Combinar parámetros predeterminados con los proporcionados
-        if params:
-            default_params.update(params)
-        
-        # Eliminar cualquier parámetro None
-        params_to_send = {k: v for k, v in default_params.items() if v is not None}
-        
-        try:
-            logger.info(f"Enviando prompt a Ollama (modelo: {self.model}, longitud: {len(prompt)} caracteres)")
-            logger.info(f"URL de la API: {self.api_url}/generate")
-            logger.info(f"Parámetros: {json.dumps({k: v for k, v in params_to_send.items() if k != 'prompt'})}")
+            logger.info("Obteniendo lista de modelos de Ollama")
             
-            # Para depuración, guardar el prompt en un archivo temporal
-            try:
-                with open("/tmp/last_prompt.txt", "w") as f:
-                    f.write(prompt)
-                logger.info("Prompt guardado en /tmp/last_prompt.txt para depuración")
-            except Exception as e:
-                logger.warning(f"No se pudo guardar el prompt para depuración: {str(e)}")
-            
-            start_time = time.time()
-            response = requests.post(
-                f"{self.api_url}/generate",
-                json=params_to_send,
-                timeout=300  # 5 minutos de timeout
-            )
+            # Realizar solicitud a Ollama
+            response = requests.get(url, timeout=10)
             response.raise_for_status()
             
-            # Verificar si la respuesta es válida
-            if response.status_code != 200:
-                logger.error(f"Error en la respuesta de Ollama: {response.status_code}")
-                return f"Error: Respuesta de Ollama no válida (código: {response.status_code})"
+            result = response.json()
             
-            # Extraer la respuesta
-            try:
-                data = response.json()
-                generation_time = time.time() - start_time
+            if 'models' in result:
+                # Extraer sólo los nombres de los modelos
+                model_names = [model['name'] for model in result['models']]
+                logger.info(f"Modelos disponibles: {model_names}")
+                return model_names
+            else:
+                logger.error(f"Respuesta de Ollama no contiene campo 'models': {result}")
+                return []
                 
-                # Guardar respuesta para depuración
-                try:
-                    with open("/tmp/last_response.json", "w") as f:
-                        json.dump(data, f, indent=2)
-                    logger.info("Respuesta guardada en /tmp/last_response.json para depuración")
-                except Exception as e:
-                    logger.warning(f"No se pudo guardar la respuesta para depuración: {str(e)}")
-                
-                # Verificar si la respuesta contiene la clave 'response'
-                if 'response' not in data:
-                    logger.error(f"Respuesta de Ollama no contiene la clave 'response': {data}")
-                    if isinstance(data, dict):
-                        logger.info(f"Claves en la respuesta: {list(data.keys())}")
-                    return f"Error: Formato de respuesta no válido. Claves disponibles: {list(data.keys()) if isinstance(data, dict) else 'ninguna'}"
-                
-                # Extraer y registrar métricas si están disponibles
-                if 'eval_count' in data:
-                    logger.info(f"Generación completada: {data.get('eval_count')} tokens evaluados en {generation_time:.2f} segundos")
-                
-                if 'total_duration' in data:
-                    logger.info(f"Duración total reportada por Ollama: {data.get('total_duration')/1e9:.2f} segundos")
-                
-                logger.info(f"Respuesta obtenida de Ollama (longitud: {len(data.get('response', ''))} caracteres)")
-                return data['response']
-            except Exception as e:
-                logger.error(f"Error al procesar la respuesta JSON: {str(e)}")
-                # Intentar devolver la respuesta cruda si es posible
-                try:
-                    return f"Error al procesar la respuesta JSON: {str(e)}. Respuesta cruda: {response.text[:500]}"
-                except:
-                    return f"Error al procesar la respuesta JSON: {str(e)}"
-        except requests.exceptions.Timeout:
-            logger.error(f"Timeout al comunicarse con Ollama después de {300} segundos")
-            return "Error: Tiempo de espera agotado al comunicarse con Ollama"
-        except requests.exceptions.RequestException as e:
-            logger.error(f"Error de conexión con Ollama: {str(e)}")
-            return f"Error de conexión con Ollama: {str(e)}"
+        except requests.RequestException as e:
+            logger.error(f"Error al comunicarse con Ollama: {str(e)}")
+            raise Exception(f"Error de comunicación con Ollama: {str(e)}")
         except Exception as e:
-            logger.error(f"Error inesperado al obtener respuesta de Ollama: {str(e)}")
-            return f"Error inesperado: {str(e)}"
+            logger.error(f"Error al obtener lista de modelos: {str(e)}")
+            raise Exception(f"Error al procesar lista de modelos: {str(e)}")
     
     def get_model_info(self, model_name: Optional[str] = None) -> Dict[str, Any]:
         """
@@ -161,7 +128,7 @@ class OllamaClient:
         model = model_name or self.model
         try:
             response = requests.post(
-                f"{self.api_url}/show",
+                f"{self._singleton._base_url}/api/show",
                 json={"name": model}
             )
             return response.json()

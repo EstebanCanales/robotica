@@ -254,4 +254,54 @@ def fetch_sensor_data() -> Dict[str, Any]:
         return response.json()
     except requests.RequestException as e:
         logger.error(f"Error al obtener datos de sensores: {str(e)}")
-        raise Exception(f"Error al obtener datos de sensores: {str(e)}") 
+        raise Exception(f"Error al obtener datos de sensores: {str(e)}")
+
+@router.get("/sensor-data", summary="Obtener datos de sensores para la app Expo")
+async def get_sensor_data_for_expo(
+    limit: int = Query(5, description="Número de registros a obtener"),
+    db: DBManager = Depends(get_db)
+) -> Dict[str, Any]:
+    """
+    Endpoint para proporcionar datos de sensores a la aplicación Expo.
+    
+    Args:
+        limit: Número máximo de registros a obtener
+        
+    Returns:
+        Datos de sensores procesados para la app
+    """
+    try:
+        # Obtener los últimos registros de datos de sensores
+        sensor_records = db.get_sensor_records(limit)
+        
+        if not sensor_records:
+            return {"message": "No hay datos de sensores disponibles", "data": []}
+        
+        # Preparar datos para la app
+        processed_records = []
+        for record in sensor_records:
+            try:
+                # Intentar parsear los datos JSON
+                data_dict = json.loads(record["raw_data"]) if isinstance(record["raw_data"], str) else record["raw_data"]
+                
+                # Agregar timestamp del registro
+                data_dict["timestamp"] = record["timestamp"]
+                data_dict["record_id"] = record["id"]
+                
+                processed_records.append(data_dict)
+            except json.JSONDecodeError:
+                logger.error(f"Error al decodificar datos del registro {record['id']}")
+                continue
+        
+        return {
+            "message": "Datos obtenidos correctamente",
+            "count": len(processed_records),
+            "data": processed_records
+        }
+        
+    except Exception as e:
+        logger.error(f"Error al obtener datos para Expo: {str(e)}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Error al obtener datos para Expo: {str(e)}"
+        ) 

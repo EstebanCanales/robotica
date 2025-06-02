@@ -1,0 +1,15 @@
+FROM node:18
+
+WORKDIR /app
+
+COPY package*.json ./
+RUN npm install
+
+COPY . .
+
+ENV EXPO_DEVTOOLS_LISTEN_ADDRESS=0.0.0.0
+ENV REACT_NATIVE_PACKAGER_HOSTNAME=localhost
+
+EXPOSE 19000 19001 19002
+
+CMD ["npm", "start"] 

@@ -2,6 +2,7 @@ services:
   api:
     build: 
       context: ./data-analysis
+    container_name: robot-data-analysis
     ports:
       - "8000:8000"
     volumes:
@@ -11,9 +12,39 @@ services:
       - OLLAMA_HOST=http://host.docker.internal:11434
       - OLLAMA_MODEL=gemma3:4b
       - SENSOR_API_URL=http://host.docker.internal:8080/datos
+      - EXPO_APP_URL=http://expo-app:19000
     extra_hosts:
       - "host.docker.internal:host-gateway"
     restart: unless-stopped
+    networks:
+      - robot-network
+
+  expo-app:
+    build:
+      context: ./robotica-app
+      dockerfile: Dockerfile
+    container_name: robot-expo-app
+    volumes:
+      - ./robotica-app:/app
+      - /app/node_modules
+    ports:
+      - "19000:19000"
+      - "19001:19001"
+      - "19002:19002"
+      - "8081:8081"
+    environment:
+      - EXPO_DEVTOOLS_LISTEN_ADDRESS=0.0.0.0
+      - REACT_NATIVE_PACKAGER_HOSTNAME=localhost
+      - API_URL=http://api:8000
+    command: npm start
+    networks:
+      - robot-network
+    depends_on:
+      - api
 
 volumes:
-  sensor_data: 
+  sensor_data:
+
+networks:
+  robot-network:
+    driver: bridge 
