@@ -565,7 +565,7 @@ const AIAnalysisDisplay: React.FC = () => {
       <ScrollView
         style={[styles.container, { backgroundColor: colors.background }]}
         contentContainerStyle={styles.contentContainer}
-        showsVerticalScrollIndicator={false}
+        showsVerticalScrollIndicator={true}
         keyboardShouldPersistTaps="handled"
       >
         {/* Botón de depuración (solo para desarrollo) */}

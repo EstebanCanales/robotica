@@ -5,7 +5,6 @@ import {
   StyleSheet,
   TouchableOpacity,
   Animated,
-  ScrollView,
 } from "react-native";
 import Markdown from "react-native-markdown-display";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
@@ -262,13 +261,13 @@ const AnalysisSection: React.FC<AnalysisSectionProps> = ({
               No hay contenido de análisis disponible.
             </Text>
           ) : isJsonContent ? (
-            <ScrollView style={styles.contentScrollView}>
+            <View style={styles.contentView}>
               <Text style={styles.jsonText}>{responseContent}</Text>
-            </ScrollView>
+            </View>
           ) : (
-            <ScrollView style={styles.contentScrollView}>
+            <View style={styles.contentView}>
               <Markdown style={markdownStyles}>{responseContent}</Markdown>
-            </ScrollView>
+            </View>
           )}
         </View>
 
@@ -327,10 +326,9 @@ const styles = StyleSheet.create({
     padding: 12,
     borderRadius: 8,
     marginBottom: 12,
-    minHeight: 100,
   },
-  contentScrollView: {
-    maxHeight: 400,
+  contentView: {
+    width: "100%",
   },
   noContentText: {
     fontSize: 16,
