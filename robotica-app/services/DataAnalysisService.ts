@@ -207,7 +207,7 @@ class DataAnalysisService {
   constructor() {
     this.api = axios.create({
       baseURL: API_BASE_URL,
-      timeout: 60000, // 60 segundos para permitir que el modelo de IA tenga tiempo de procesar
+      timeout: 180000, // 3 minutos para permitir que el modelo de IA tenga tiempo de procesar
       headers: {
         'Content-Type': 'application/json',
         'Accept': 'application/json'

@@ -11,7 +11,7 @@ import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { AnalysisResult } from "@/services/DataAnalysisService";
 import markdownStyles from "./MarkdownStyles";
-import { useColorScheme } from "@/hooks/useColorScheme";
+import { useThemeContext } from "@/hooks/ThemeContext";
 import { Colors } from "@/constants/Colors";
 
 interface AnalysisSectionProps {
@@ -29,9 +29,7 @@ const AnalysisSection: React.FC<AnalysisSectionProps> = ({
   onClearSelection,
   onHistoryPress,
 }) => {
-  const { colorScheme } = useColorScheme();
-  // Asegurar que solo sea 'light' o 'dark' para indexar Colors
-  const theme = colorScheme === "dark" ? "dark" : "light";
+  const { theme } = useThemeContext();
   const colors = Colors[theme];
 
   // Usar el análisis seleccionado del dropdown o el análisis actual

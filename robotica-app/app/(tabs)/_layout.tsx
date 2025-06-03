@@ -3,12 +3,11 @@ import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { Platform } from "react-native";
 
 import { Colors } from "@/constants/Colors";
-import { useColorScheme } from "@/hooks/useColorScheme";
+import { useThemeContext } from "@/hooks/ThemeContext";
 import { ThemedTabBar } from "@/components";
 
 export default function TabLayout() {
-  const { colorScheme } = useColorScheme();
-  const theme = colorScheme === "dark" ? "dark" : "light";
+  const { theme } = useThemeContext();
 
   return (
     <Tabs
@@ -22,6 +21,7 @@ export default function TabLayout() {
           default: {},
         }),
       }}
+      // @ts-ignore - Ignoramos el error de tipo aquí debido a versiones inconsistentes
       tabBar={(props) => <ThemedTabBar {...props} />}
     >
       <Tabs.Screen

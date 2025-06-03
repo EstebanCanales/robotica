@@ -1,7 +1,7 @@
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { View, Text, StyleSheet, Animated, Easing } from "react-native";
 import { Colors } from "@/constants/Colors";
-import { useColorScheme } from "@/hooks/useColorScheme";
+import { useThemeContext } from "@/hooks/ThemeContext";
 
 interface ProgressLoaderProps {
   progress?: number; // Valor de 0 a 100
@@ -9,6 +9,8 @@ interface ProgressLoaderProps {
   color?: string;
   height?: number;
   label?: string;
+  autoProgress?: boolean; // Si es true, avanza automáticamente simulando carga
+  onComplete?: () => void; // Callback cuando llega al 100%
 }
 
 const ProgressLoader: React.FC<ProgressLoaderProps> = ({
@@ -17,29 +19,105 @@ const ProgressLoader: React.FC<ProgressLoaderProps> = ({
   color,
   height = 8,
   label,
+  autoProgress = false,
+  onComplete,
 }) => {
-  const { colorScheme } = useColorScheme();
-  // Asegurar que solo sea 'light' o 'dark' para indexar Colors
-  const theme = colorScheme === "dark" ? "dark" : "light";
+  const { theme } = useThemeContext();
   const colors = Colors[theme];
   const barColor = color || colors.tint;
+
+  // Estado para el progreso simulado
+  const [simulatedProgress, setSimulatedProgress] = useState(0);
 
   // Animaciones
   const progressAnim = useRef(new Animated.Value(0)).current;
   const pulseAnim = useRef(new Animated.Value(1)).current;
   const indeterminateAnim = useRef(new Animated.Value(0)).current;
 
+  // Efecto para gestionar el progreso simulado automático
+  useEffect(() => {
+    if (autoProgress && !indeterminate) {
+      // Sistema para simular progreso realista: rápido al principio, lento al final
+      const simulateProgress = () => {
+        // Intervalos de tiempo variables según el progreso actual
+        let interval = 100; // ms
+        let increment = 1; // %
+
+        if (simulatedProgress < 30) {
+          // Avance rápido inicial
+          interval = 50;
+          increment = 2;
+        } else if (simulatedProgress < 60) {
+          // Avance moderado
+          interval = 100;
+          increment = 1;
+        } else if (simulatedProgress < 85) {
+          // Avance más lento
+          interval = 200;
+          increment = 0.5;
+        } else if (simulatedProgress < 95) {
+          // Muy lento al final
+          interval = 400;
+          increment = 0.3;
+        } else {
+          // Casi detenido en el tramo final
+          interval = 1000;
+          increment = 0.1;
+        }
+
+        if (simulatedProgress < 99) {
+          const nextProgress = Math.min(99, simulatedProgress + increment);
+          setSimulatedProgress(nextProgress);
+          timeoutRef.current = setTimeout(simulateProgress, interval);
+        }
+      };
+
+      // Iniciar la simulación
+      const timeoutRef = { current: null as any };
+      timeoutRef.current = setTimeout(simulateProgress, 100);
+
+      return () => {
+        if (timeoutRef.current) clearTimeout(timeoutRef.current);
+      };
+    }
+
+    // Si no está en modo automático, usar el progreso proporcionado
+    if (!indeterminate && !autoProgress) {
+      setSimulatedProgress(progress);
+    }
+  }, [autoProgress, indeterminate, simulatedProgress, progress]);
+
   // Actualizar la animación cuando cambia el progreso
   useEffect(() => {
     if (!indeterminate) {
+      const currentProgress = autoProgress ? simulatedProgress : progress;
+
       Animated.timing(progressAnim, {
-        toValue: progress / 100, // Convertimos a valor de 0 a 1
+        toValue: currentProgress / 100, // Convertimos a valor de 0 a 1
         duration: 300,
         useNativeDriver: false,
         easing: Easing.inOut(Easing.ease),
-      }).start();
+      }).start(() => {
+        // Si llega al 100%, llamar al callback
+        if (currentProgress >= 100 && onComplete) {
+          onComplete();
+        }
+      });
     }
-  }, [progress, indeterminate]);
+  }, [progress, indeterminate, simulatedProgress, autoProgress, onComplete]);
+
+  // Función pública para completar el progreso al 100% inmediatamente
+  const completeProgress = () => {
+    setSimulatedProgress(100);
+    Animated.timing(progressAnim, {
+      toValue: 1,
+      duration: 300,
+      useNativeDriver: false,
+      easing: Easing.inOut(Easing.ease),
+    }).start(() => {
+      if (onComplete) onComplete();
+    });
+  };
 
   // Animación de pulso para efecto visual
   useEffect(() => {
@@ -92,6 +170,9 @@ const ProgressLoader: React.FC<ProgressLoaderProps> = ({
     outputRange: ["30%", "60%", "30%"],
   });
 
+  // Valor de progreso a mostrar
+  const displayProgress = autoProgress ? simulatedProgress : progress;
+
   return (
     <View style={styles.container}>
       {label && (
@@ -99,7 +180,7 @@ const ProgressLoader: React.FC<ProgressLoaderProps> = ({
           <Text style={[styles.label, { color: colors.text }]}>{label}</Text>
           {!indeterminate && (
             <Text style={[styles.percentage, { color: colors.text }]}>
-              {Math.round(progress)}%
+              {Math.round(displayProgress)}%
             </Text>
           )}
         </View>

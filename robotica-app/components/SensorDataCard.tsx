@@ -2,12 +2,17 @@ import { StyleSheet } from "react-native";
 import { ThemedView } from "./ThemedView";
 import { ThemedText } from "./ThemedText";
 import { SensorData } from "@/services/ApiService";
+import { useThemeContext } from "@/hooks/ThemeContext";
+import { Colors } from "@/constants/Colors";
 
 interface SensorDataCardProps {
   data: SensorData;
 }
 
 export function SensorDataCard({ data }: SensorDataCardProps) {
+  const { theme } = useThemeContext();
+  const colors = Colors[theme];
+
   // Formatear la fecha para mostrarla de forma amigable
   const formatDate = (timestamp: string) => {
     const date = new Date(timestamp);
@@ -45,7 +50,7 @@ export function SensorDataCard({ data }: SensorDataCardProps) {
     <ThemedView style={styles.card}>
       <ThemedView style={styles.header}>
         <ThemedText type="subtitle">Sensor #{data.record_id}</ThemedText>
-        <ThemedText style={styles.timestamp}>
+        <ThemedText style={[styles.timestamp, { color: colors.placeholder }]}>
           {formatDate(data.timestamp)}
         </ThemedText>
       </ThemedView>
@@ -76,7 +81,6 @@ const styles = StyleSheet.create({
   },
   timestamp: {
     fontSize: 12,
-    opacity: 0.6,
   },
   sensorDataContainer: {
     gap: 8,

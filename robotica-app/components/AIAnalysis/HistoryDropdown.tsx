@@ -13,7 +13,7 @@ import { AnalysisResult } from "@/services/DataAnalysisService";
 import FuturisticLoader from "./FuturisticLoader";
 import AnimatedLoadingText from "./AnimatedLoadingText";
 import { Colors } from "@/constants/Colors";
-import { useColorScheme } from "@/hooks/useColorScheme";
+import { useThemeContext } from "@/hooks/ThemeContext";
 
 interface HistoryDropdownProps {
   dropdownVisible: boolean;
@@ -34,9 +34,7 @@ const HistoryDropdown: React.FC<HistoryDropdownProps> = ({
   onSelectAnalysis,
   onViewAllPress,
 }) => {
-  const { colorScheme } = useColorScheme();
-  // Asegurar que solo sea 'light' o 'dark' para indexar Colors
-  const theme = colorScheme === "dark" ? "dark" : "light";
+  const { theme } = useThemeContext();
   const colors = Colors[theme];
 
   // Limitar a los 5 análisis más recientes para el dropdown
@@ -243,7 +241,7 @@ const HistoryDropdown: React.FC<HistoryDropdownProps> = ({
 
 const styles = StyleSheet.create({
   dropdownContainer: {
-    marginTop: 12,
+    marginTop: 2,
     width: "100%",
     position: "relative",
     zIndex: 1000, // Aumentado para estar siempre por encima

@@ -2,22 +2,22 @@ import React from "react";
 import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { AnalysisResult } from "@/services/DataAnalysisService";
-import { useColorScheme } from "@/hooks/useColorScheme";
+import { useThemeContext } from "@/hooks/ThemeContext";
 import { Colors } from "@/constants/Colors";
 
 interface HistoryItemProps {
   item: AnalysisResult;
-  isSelected: boolean;
-  onPress: (analysis: AnalysisResult) => void;
+  isSelected?: boolean;
+  onPress: (item: AnalysisResult) => void;
 }
 
 const HistoryItem: React.FC<HistoryItemProps> = ({
   item,
-  isSelected,
+  isSelected = false,
   onPress,
 }) => {
-  const { colorScheme } = useColorScheme();
-  const colors = Colors[colorScheme];
+  const { theme } = useThemeContext();
+  const colors = Colors[theme];
 
   // Función mejorada para extraer título y previsualización
   const extractContent = () => {

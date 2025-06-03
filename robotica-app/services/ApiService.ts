@@ -39,7 +39,7 @@ export interface ModelList {
 }
 
 // Configuración de timeout para las peticiones (60 segundos)
-const AXIOS_TIMEOUT = 60000;
+const AXIOS_TIMEOUT = 180000;
 
 // Clase principal del servicio API
 class ApiService {

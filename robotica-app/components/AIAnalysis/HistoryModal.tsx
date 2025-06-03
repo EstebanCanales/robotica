@@ -6,17 +6,19 @@ import {
   TouchableOpacity,
   Modal,
   FlatList,
+  ActivityIndicator,
+  TouchableWithoutFeedback,
 } from "react-native";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
+import { BlurView } from "expo-blur";
 import { AnalysisResult } from "@/services/DataAnalysisService";
+import { TimeFilter } from "@/components/AIAnalysis";
 import HistoryItem from "./HistoryItem";
 import FuturisticLoader from "./FuturisticLoader";
 import AnimatedLoadingText from "./AnimatedLoadingText";
-import { useColorScheme } from "@/hooks/useColorScheme";
+import { useThemeContext } from "@/hooks/ThemeContext";
 import { Colors } from "@/constants/Colors";
 import { ProgressLoader } from "@/components/AIAnalysis";
-
-export type TimeFilter = "reciente" | "dia" | "semana" | "todo";
 
 interface HistoryModalProps {
   visible: boolean;
@@ -39,9 +41,7 @@ const HistoryModal: React.FC<HistoryModalProps> = ({
   onFilterChange,
   onSelectAnalysis,
 }) => {
-  const { colorScheme } = useColorScheme();
-  // Asegurar que solo sea 'light' o 'dark' para indexar Colors
-  const theme = colorScheme === "dark" ? "dark" : "light";
+  const { theme } = useThemeContext();
   const colors = Colors[theme];
 
   // Función para comparar IDs y determinar si un elemento está seleccionado

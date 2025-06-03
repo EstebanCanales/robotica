@@ -11,72 +11,22 @@ import {
 } from "react-native";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
-import * as Haptics from "expo-haptics";
 import { SafeAreaView } from "react-native-safe-area-context";
-import Animated, {
-  useAnimatedStyle,
-  withTiming,
-} from "react-native-reanimated";
 import { Stack } from "expo-router";
 import { Image } from "expo-image";
 
-import { ThemedText, ThemedView } from "@/components";
-import { useColorScheme } from "@/hooks/useColorScheme";
+import { useThemeContext } from "@/hooks/ThemeContext";
 import { Colors } from "@/constants/Colors";
 import { dataAnalysisService } from "@/services/DataAnalysisService";
 
 const { width } = Dimensions.get("window");
 
-// FAQ items
-interface FaqItem {
-  question: string;
-  answer: string;
-}
-
-const faqs: FaqItem[] = [
-  {
-    question: "¿Qué hace esta aplicación?",
-    answer:
-      "RoboticApp analiza datos de sensores IoT utilizando inteligencia artificial para proporcionar información valiosa sobre las condiciones ambientales y ayudar a tomar mejores decisiones basadas en datos.",
-  },
-  {
-    question: "¿Cómo funciona el análisis de IA?",
-    answer:
-      "La aplicación recopila datos de varios sensores (temperatura, humedad, luz, presión, etc.) y utiliza modelos de aprendizaje automático para analizar patrones y generar información útil y recomendaciones.",
-  },
-  {
-    question: "¿Puedo ver datos históricos?",
-    answer:
-      "Sí, la aplicación almacena todos los análisis generados, permitiéndote acceder a un historial completo de resultados anteriores y revisar las tendencias a lo largo del tiempo.",
-  },
-];
-
 export default function HomeScreen() {
-  // Estado para FAQs expandibles
-  const [expandedIndex, setExpandedIndex] = useState<number | null>(null);
   const [usingMockData, setUsingMockData] = useState<boolean>(false);
 
-  // Configuración del tema
-  const colorSchemeResult = useColorScheme();
-
-  // Verificamos si es un objeto (implementación normal) o string (implementación web)
-  const colorScheme =
-    typeof colorSchemeResult === "object"
-      ? colorSchemeResult.colorScheme
-      : colorSchemeResult;
-  const userTheme =
-    typeof colorSchemeResult === "object"
-      ? colorSchemeResult.userTheme
-      : colorScheme;
-  const setColorScheme =
-    typeof colorSchemeResult === "object" && colorSchemeResult.setColorScheme
-      ? colorSchemeResult.setColorScheme
-      : () => console.log("Cambio de tema no disponible en web");
-
-  const theme = colorScheme === "dark" ? "dark" : "light"; // Asegurando que solo sea "light" o "dark"
+  const { theme } = useThemeContext();
   const colors = Colors[theme];
 
-  // Comprobar si estamos usando datos simulados
   useEffect(() => {
     const checkConnection = async () => {
       try {
@@ -93,50 +43,6 @@ export default function HomeScreen() {
   }, []);
 
   // Función para expandir/contraer FAQs
-  const toggleFaq = (index: number) => {
-    Haptics.selectionAsync();
-    setExpandedIndex(expandedIndex === index ? null : index);
-  };
-
-  const renderFaqItem = (item: FaqItem, index: number) => {
-    const isExpanded = expandedIndex === index;
-
-    const animatedStyle = useAnimatedStyle(() => {
-      return {
-        maxHeight: isExpanded
-          ? withTiming(1000, { duration: 300 })
-          : withTiming(0, { duration: 300 }),
-        opacity: isExpanded
-          ? withTiming(1, { duration: 300 })
-          : withTiming(0, { duration: 200 }),
-      };
-    });
-
-    return (
-      <View style={styles.faqItem} key={index}>
-        <TouchableOpacity
-          style={styles.faqQuestion}
-          onPress={() => toggleFaq(index)}
-          activeOpacity={0.7}
-        >
-          <Text style={[styles.questionText, { color: colors.text }]}>
-            {item.question}
-          </Text>
-          <MaterialCommunityIcons
-            name={isExpanded ? "chevron-up" : "chevron-down"}
-            size={20}
-            color={colors.tint}
-          />
-        </TouchableOpacity>
-
-        <Animated.View style={[styles.faqAnswer, animatedStyle]}>
-          <Text style={[styles.answerText, { color: colors.text }]}>
-            {item.answer}
-          </Text>
-        </Animated.View>
-      </View>
-    );
-  };
 
   return (
     <SafeAreaView
@@ -170,7 +76,8 @@ export default function HomeScreen() {
             style={[
               styles.mockDataBanner,
               {
-                backgroundColor: `${colors.error}20`,
+                backgroundColor:
+                  theme === "light" ? `${colors.error}20` : colors.card,
                 borderColor: colors.error,
               },
             ]}
@@ -199,114 +106,6 @@ export default function HomeScreen() {
             mediante inteligencia artificial.
           </Text>
         </LinearGradient>
-
-        {/* Sección de tema */}
-        <Text style={[styles.sectionTitle, { color: colors.tint }]}>
-          Tema de la aplicación
-        </Text>
-
-        <View
-          style={[
-            styles.themeContainer,
-            { backgroundColor: colors.card, borderColor: colors.border },
-          ]}
-        >
-          <View style={styles.optionContainer}>
-            <TouchableOpacity
-              style={[
-                styles.themeOption,
-                userTheme === "light" && {
-                  backgroundColor: `${colors.tint}20`,
-                  borderColor: colors.tint,
-                },
-              ]}
-              onPress={() => setColorScheme("light")}
-            >
-              <View style={styles.themeIconContainer}>
-                <MaterialCommunityIcons
-                  name="white-balance-sunny"
-                  size={24}
-                  color={userTheme === "light" ? colors.tint : colors.icon}
-                />
-              </View>
-              <Text
-                style={[
-                  styles.themeText,
-                  { color: userTheme === "light" ? colors.tint : colors.text },
-                ]}
-              >
-                Claro
-              </Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={[
-                styles.themeOption,
-                userTheme === "dark" && {
-                  backgroundColor: `${colors.tint}20`,
-                  borderColor: colors.tint,
-                },
-              ]}
-              onPress={() => setColorScheme("dark")}
-            >
-              <View style={styles.themeIconContainer}>
-                <MaterialCommunityIcons
-                  name="moon-waning-crescent"
-                  size={24}
-                  color={userTheme === "dark" ? colors.tint : colors.icon}
-                />
-              </View>
-              <Text
-                style={[
-                  styles.themeText,
-                  { color: userTheme === "dark" ? colors.tint : colors.text },
-                ]}
-              >
-                Oscuro
-              </Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={[
-                styles.themeOption,
-                userTheme === "system" && {
-                  backgroundColor: `${colors.tint}20`,
-                  borderColor: colors.tint,
-                },
-              ]}
-              onPress={() => setColorScheme("system")}
-            >
-              <View style={styles.themeIconContainer}>
-                <MaterialCommunityIcons
-                  name="theme-light-dark"
-                  size={24}
-                  color={userTheme === "system" ? colors.tint : colors.icon}
-                />
-              </View>
-              <Text
-                style={[
-                  styles.themeText,
-                  { color: userTheme === "system" ? colors.tint : colors.text },
-                ]}
-              >
-                Sistema
-              </Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-
-        <Text style={[styles.sectionTitle, { color: colors.tint }]}>
-          Preguntas frecuentes
-        </Text>
-
-        <View
-          style={[
-            styles.faqContainer,
-            { backgroundColor: colors.card, borderColor: colors.border },
-          ]}
-        >
-          {faqs.map((faq, index) => renderFaqItem(faq, index))}
-        </View>
 
         {/* Información de la aplicación */}
         <View style={styles.versionContainer}>
@@ -363,79 +162,10 @@ const styles = StyleSheet.create({
   },
   cardText: {
     fontSize: 14,
-    color: "rgba(255, 255, 255, 0.8)",
+    color: "#ffffff",
     textAlign: "center",
     marginTop: 8,
     marginBottom: 16,
-  },
-  sectionTitle: {
-    fontSize: 20,
-    fontWeight: "bold",
-    marginTop: 24,
-    marginBottom: 16,
-  },
-  themeContainer: {
-    borderRadius: 16,
-    padding: 16,
-    marginBottom: 20,
-    borderWidth: 1,
-  },
-  optionContainer: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    flexWrap: "wrap",
-  },
-  themeOption: {
-    width: "31%",
-    aspectRatio: 1,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: "transparent",
-    justifyContent: "center",
-    alignItems: "center",
-    padding: 8,
-  },
-  themeIconContainer: {
-    marginBottom: 8,
-  },
-  themeText: {
-    fontSize: 14,
-    fontWeight: "500",
-  },
-  faqContainer: {
-    borderRadius: 12,
-    overflow: "hidden",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
-    borderWidth: 1,
-  },
-  faqItem: {
-    borderBottomWidth: 1,
-    borderBottomColor: "#f0f0f0",
-  },
-  faqQuestion: {
-    padding: 16,
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-  },
-  questionText: {
-    fontSize: 16,
-    fontWeight: "500",
-    flex: 1,
-    paddingRight: 8,
-  },
-  faqAnswer: {
-    paddingHorizontal: 16,
-    paddingBottom: 16,
-    overflow: "hidden",
-  },
-  answerText: {
-    fontSize: 14,
-    lineHeight: 20,
   },
   versionContainer: {
     alignItems: "center",
@@ -450,7 +180,6 @@ const styles = StyleSheet.create({
   },
   mockDataBanner: {
     borderWidth: 1,
-    borderColor: "#e0e0e0",
     padding: 12,
     marginBottom: 16,
     borderRadius: 8,

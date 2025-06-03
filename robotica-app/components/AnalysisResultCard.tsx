@@ -1,6 +1,8 @@
 import { StyleSheet } from "react-native";
 import { ThemedView } from "./ThemedView";
 import { ThemedText } from "./ThemedText";
+import { useThemeContext } from "@/hooks/ThemeContext";
+import { Colors } from "@/constants/Colors";
 
 interface AnalysisResultCardProps {
   id: number;
@@ -15,6 +17,9 @@ export function AnalysisResultCard({
   result,
   timestamp,
 }: AnalysisResultCardProps) {
+  const { theme } = useThemeContext();
+  const colors = Colors[theme];
+
   // Formatear la fecha para mostrarla de forma amigable
   const formatDate = (timestamp: string) => {
     const date = new Date(timestamp);
@@ -31,16 +36,24 @@ export function AnalysisResultCard({
     <ThemedView style={styles.card}>
       <ThemedView style={styles.header}>
         <ThemedText type="subtitle">Análisis #{id}</ThemedText>
-        <ThemedText style={styles.timestamp}>
+        <ThemedText style={[styles.timestamp, { color: colors.placeholder }]}>
           {formatDate(timestamp)}
         </ThemedText>
       </ThemedView>
 
-      <ThemedText style={styles.dataIdText}>
+      <ThemedText style={[styles.dataIdText, { color: colors.placeholder }]}>
         Datos analizados: #{data_id}
       </ThemedText>
 
-      <ThemedView style={styles.resultContainer}>
+      <ThemedView
+        style={[
+          styles.resultContainer,
+          {
+            backgroundColor:
+              theme === "light" ? "rgba(0, 0, 0, 0.03)" : colors.card,
+          },
+        ]}
+      >
         <ThemedText>{result}</ThemedText>
       </ThemedView>
     </ThemedView>
@@ -66,15 +79,12 @@ const styles = StyleSheet.create({
   },
   timestamp: {
     fontSize: 12,
-    opacity: 0.6,
   },
   dataIdText: {
     fontSize: 14,
-    opacity: 0.8,
     marginBottom: 12,
   },
   resultContainer: {
-    backgroundColor: "rgba(0, 0, 0, 0.03)",
     padding: 12,
     borderRadius: 6,
   },

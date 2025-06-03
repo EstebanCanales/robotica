@@ -38,7 +38,7 @@ interface SensorDataState {
  */
 export function useSensorData(
   initialLoad: boolean = true,
-  initialLimit: number = 5
+  initialLimit: number = 30
 ): SensorDataState {
   // Estados para datos de sensores
   const [isLoading, setIsLoading] = useState<boolean>(true);

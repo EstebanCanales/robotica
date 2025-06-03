@@ -10,7 +10,7 @@ import {
   ActivityIndicator,
   Alert,
 } from "react-native";
-import { useColorScheme } from "@/hooks/useColorScheme";
+import { useThemeContext } from "@/hooks/ThemeContext";
 import { Colors } from "@/constants/Colors";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import dataAnalysisService, { ModelInfo } from "@/services/DataAnalysisService";
@@ -18,23 +18,7 @@ import { ProgressLoader } from "@/components/AIAnalysis";
 
 export default function ConfiguracionScreen() {
   // Tema
-  const colorSchemeResult = useColorScheme();
-
-  // Verificamos si es un objeto (implementación normal) o string (implementación web)
-  const colorScheme =
-    typeof colorSchemeResult === "object"
-      ? colorSchemeResult.colorScheme
-      : colorSchemeResult;
-  const userTheme =
-    typeof colorSchemeResult === "object"
-      ? colorSchemeResult.userTheme
-      : colorScheme;
-  const setColorScheme =
-    typeof colorSchemeResult === "object" && colorSchemeResult.setColorScheme
-      ? colorSchemeResult.setColorScheme
-      : () => console.log("Cambio de tema no disponible en web");
-
-  const theme = colorScheme === "dark" ? "dark" : "light"; // Asegurando que solo sea "light" o "dark"
+  const { colorScheme, userTheme, setColorScheme, theme } = useThemeContext();
   const colors = Colors[theme];
 
   // Estados para modelos IA
@@ -280,7 +264,9 @@ export default function ConfiguracionScreen() {
       >
         <View style={styles.modalOverlay}>
           <View style={[styles.modalContent, { backgroundColor: colors.card }]}>
-            <View style={styles.modalHeader}>
+            <View
+              style={[styles.modalHeader, { borderBottomColor: colors.border }]}
+            >
               <Text style={[styles.modalTitle, { color: colors.text }]}>
                 Seleccionar modelo de IA
               </Text>
@@ -450,7 +436,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
     padding: 16,
     borderBottomWidth: 1,
-    borderBottomColor: "#eee",
   },
   modalTitle: {
     fontSize: 18,

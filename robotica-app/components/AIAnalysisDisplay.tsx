@@ -16,23 +16,18 @@ import dataAnalysisService, {
 import {
   AnalysisButton,
   AnalysisSection,
-  FuturisticLoader,
   HistoryModal,
   HistoryDropdown,
-  ModelSelector,
-  ModelSelectionModal,
   TimeFilter,
   ProgressLoader,
 } from "@/components/AIAnalysis";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { Colors } from "@/constants/Colors";
-import { useColorScheme } from "@/hooks/useColorScheme";
+import { useThemeContext } from "@/hooks/ThemeContext";
 
 const AIAnalysisDisplay: React.FC = () => {
-  // Añadimos soporte para tema
-  const { colorScheme } = useColorScheme();
-  // Asegurar que solo sea 'light' o 'dark' para indexar Colors
-  const theme = colorScheme === "dark" ? "dark" : "light";
+  // Usar el contexto de tema global para que responda a cambios
+  const { theme } = useThemeContext();
   const colors = Colors[theme];
 
   // Estados
@@ -568,7 +563,8 @@ const AIAnalysisDisplay: React.FC = () => {
         showsVerticalScrollIndicator={true}
         keyboardShouldPersistTaps="handled"
       >
-        {/* Botón de depuración (solo para desarrollo) */}
+        {/*
+         Botón de depuración (solo para desarrollo)
         <TouchableOpacity
           style={styles.debugButton}
           onPress={handleDebugResponses}
@@ -584,6 +580,8 @@ const AIAnalysisDisplay: React.FC = () => {
           </View>
         </TouchableOpacity>
 
+          */}
+
         {errorMsg && (
           <View
             style={[styles.errorContainer, { borderLeftColor: colors.error }]}
@@ -595,14 +593,17 @@ const AIAnalysisDisplay: React.FC = () => {
         )}
 
         <View style={styles.topSection}>
-          {/* Selector de modelo */}
-          <ModelSelector
-            currentModel={currentModel}
-            isChangingModel={isChangingModel}
-            isLoadingModels={isLoadingModels}
-            isDisabled={isChangingModel || processing}
-            onPress={() => setModelSelectorVisible(true)}
-          />
+          <Text
+            style={[
+              styles.title,
+              {
+                color: colors.buttonText,
+                backgroundColor: colors.tint,
+              },
+            ]}
+          >
+            Análisis IA
+          </Text>
 
           {/* Historial dropdown - Envuelto en un View para controlar z-index */}
           <View style={styles.dropdownWrapper}>
@@ -665,14 +666,6 @@ const AIAnalysisDisplay: React.FC = () => {
         />
 
         {/* Modal de selección de modelo */}
-        <ModelSelectionModal
-          visible={modelSelectorVisible}
-          isLoadingModels={isLoadingModels}
-          modelos={modelos}
-          isChangingModel={isChangingModel}
-          onClose={() => setModelSelectorVisible(false)}
-          onModelSelect={handleModelSelect}
-        />
 
         {/* Mensaje cuando no hay análisis */}
         {!analysis && !selectedAnalysis && !processing && initialLoadDone && (
@@ -768,6 +761,16 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: "500", // Más bold
     marginLeft: 6,
+  },
+  title: {
+    marginTop: 15,
+    fontSize: 20,
+    fontWeight: "bold",
+    marginBottom: 16,
+    paddingVertical: 5,
+    paddingHorizontal: 10,
+    borderRadius: 10,
+    overflow: "hidden",
   },
 });
 

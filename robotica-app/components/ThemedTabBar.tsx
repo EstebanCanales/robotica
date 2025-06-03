@@ -1,7 +1,7 @@
 import { BottomTabBarProps } from "@react-navigation/bottom-tabs";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { StyleSheet, Pressable, View } from "react-native";
-import { useColorScheme } from "@/hooks/useColorScheme";
+import { useThemeContext } from "@/hooks/ThemeContext";
 import { Colors } from "@/constants/Colors";
 
 export function ThemedTabBar({
@@ -9,11 +9,11 @@ export function ThemedTabBar({
   descriptors,
   navigation,
 }: BottomTabBarProps) {
-  const { colorScheme } = useColorScheme();
-  const theme = colorScheme === "dark" ? "dark" : "light";
+  const { colorScheme, theme } = useThemeContext();
   const insets = useSafeAreaInsets();
 
   const backgroundColor = Colors[theme].background;
+  const colors = Colors[theme];
 
   return (
     <View
@@ -22,10 +22,7 @@ export function ThemedTabBar({
         {
           paddingBottom: insets.bottom,
           backgroundColor,
-          borderTopColor:
-            colorScheme === "dark"
-              ? "rgba(255,255,255,0.1)"
-              : "rgba(0,0,0,0.1)",
+          borderTopColor: colors.border,
         },
       ]}
     >
@@ -48,6 +45,7 @@ export function ThemedTabBar({
           });
 
           if (!isFocused && !event.defaultPrevented) {
+            // @ts-ignore: Ignoramos el error de tipo aquí
             navigation.navigate(route.name);
           }
         };
