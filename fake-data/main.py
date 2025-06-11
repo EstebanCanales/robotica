@@ -36,8 +36,8 @@ async def get_datos():
             "humedad_pct": random.uniform(70.0, 90.0) if random.random() > 0.2 else None
         },
         "gps": {
-            "latitud": 9.890018 + random.uniform(-0.001, 0.001),
-            "longitud": -84.089006 + random.uniform(-0.001, 0.001)
+            "latitud": 9.8893941,
+            "longitud": -84.0899409
         },
         "clima_satelital": {
             "T2M": random.uniform(22.0, 24.0),
