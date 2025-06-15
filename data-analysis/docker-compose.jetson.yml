@@ -1,0 +1,27 @@
+services:
+  api:
+    build: 
+      context: .
+    container_name: robot-data-analysis
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./app:/app/app
+      - ./run.py:/app/run.py
+      - sensor_data:/app/data
+    environment:
+      - OLLAMA_HOST=http://host.docker.internal:11434
+      - OLLAMA_MODEL=gemma3:4b
+      - SENSOR_API_URL=http://host.docker.internal:8080/datos
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    restart: unless-stopped
+    networks:
+      - robot-network
+
+volumes:
+  sensor_data:
+
+networks:
+  robot-network:
+    driver: bridge 
