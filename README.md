@@ -1,148 +1,109 @@
-# Proyecto Robotica
+# Robotica Data Platform
 
-Este repositorio contiene el código para una aplicación full-stack de análisis de datos de robótica. La solución consta de una aplicación móvil para la visualización y solicitud de análisis, un servicio de backend para procesar datos y un generador de datos falsos para pruebas.
+Este proyecto es una plataforma full-stack para la recolección, análisis y monitoreo de datos de sensores agrícolas, diseñada para ser robusta, escalable y fácil de usar.
 
-## Arquitectura
+## Visión General
 
-El proyecto está compuesto por tres componentes principales:
+La plataforma consta de tres componentes principales:
 
-1.  **`robotica-app` (Frontend):** Una aplicación móvil desarrollada con React Native (Expo) que permite a los usuarios visualizar datos de sensores en tiempo real, solicitar análisis de IA, ver resultados históricos y configurar la aplicación.
-2.  **`data-analysis` (Backend):** Un servicio de API construido con Python y FastAPI. Se encarga de gestionar los datos de los sensores, interactuar con una base de datos PostgreSQL, y realizar análisis complejos utilizando un modelo de lenguaje local a través de Ollama.
-3.  **`fake-data` (Generador de Datos):** Un script de Python para poblar la base de datos con datos de sensores simulados, útil para desarrollo y pruebas.
+1.  **Backend de Análisis de Datos (`data-analysis`)**: Un servicio FastAPI en Python que ingiere datos, los almacena, interactúa con un modelo de IA (Ollama) para generar análisis y expone una API RESTful.
+2.  **Aplicación Móvil (`robotica-app`)**: Una aplicación en React Native (Expo) que permite a los usuarios monitorear los datos de los sensores en tiempo real, ver análisis históricos y gestionar el sistema.
+3.  **Generador de Datos Falsos (`fake-data`)**: Un microservicio FastAPI que simula lecturas de sensores del mundo real para permitir pruebas de carga y desarrollo sin hardware físico.
 
-Los servicios de backend (`api`, `db`, `ollama`) están orquestados con Docker Compose para un despliegue y desarrollo sencillos.
+## Key Features
 
-![Arquitectura del Sistema](httpsd://i.imgur.com/YourDiagram.png)
-*(Nota: Reemplazar con una URL de diagrama de arquitectura si está disponible)*
-
----
+- **Análisis con IA**: Integración con Ollama para analizar automáticamente los datos de sensores y extraer insights valiosos.
+- **API RESTful Completa**: Endpoints documentados para la ingesta de datos, consulta de análisis, historial y gestión de modelos.
+- **Base de Datos Optimizada**: Capa de persistencia con SQLite, con consultas optimizadas e indexación para un rendimiento rápido (<1ms en pruebas).
+- **Monitoreo en Tiempo Real**: Aplicación móvil para visualizar datos y análisis al instante.
+- **Entorno Containerizado**: Todo el stack se gestiona con Docker Compose para un desarrollo local rápido y consistente.
+- **Generador de Datos de Prueba**: Herramienta para simular datos realistas y facilitar el testing de QA.
 
 ## Tech Stack
 
-| Componente      | Tecnologías Principales                                       |
-| --------------- | ------------------------------------------------------------- |
-| **Frontend**    | React Native, Expo, TypeScript, Bun                           |
-| **Backend**     | Python, FastAPI, SQLAlchemy, Uvicorn, Ollama, Docker          |
-| **Base de Datos** | PostgreSQL                                                    |
-| **Data Faker**  | Python, Faker, Psycopg2                                       |
+| Componente          | Tecnologías                                        |
+| ------------------- | -------------------------------------------------- |
+| **Backend**         | Python, FastAPI, Uvicorn                           |
+| **Frontend**        | React Native, Expo, TypeScript                     |
+| **Base de Datos**   | SQLite                                             |
+| **IA & Machine Learning** | Ollama (con modelos como `gemma3:4b`)              |
+| **Containerización**| Docker, Docker Compose                             |
+| **Testing**         | Pytest, Unittest                                   |
 
----
-
-## Estructura del Proyecto
+## Project Structure
 
 ```
-/
-├── data-analysis/        # Servicio Backend (API FastAPI)
-│   ├── app/              # Lógica de la aplicación
-│   │   ├── ai/           # Cliente para interactuar con Ollama
-│   │   ├── api/          # Definición de endpoints de la API
-│   │   ├── db/           # Gestión de la base de datos
-│   │   └── models/       # Esquemas de datos y modelos SQLAlchemy
-│   ├── Dockerfile
-│   └── requirements.txt
-├── fake-data/            # Script para generar datos de prueba
-│   ├── main.py
-│   └── requirements.txt
-├── robotica-app/         # Aplicación móvil (React Native / Expo)
-│   ├── app/              # Pantallas y navegación de la app
-│   ├── assets/           # Imágenes y fuentes
-│   ├── components/       # Componentes reutilizables de la UI
-│   ├── constants/        # Constantes (colores, endpoints de API)
-│   ├── hooks/            # Hooks personalizados de React
-│   └── services/         # Lógica de negocio y comunicación con API
-└── docker-compose.yml    # Orquestación de los servicios de backend
+/robotica
+├── data-analysis/      # Backend FastAPI (API, DB, IA)
+├── robotica-app/       # Frontend React Native (Expo)
+├── fake-data/          # Generador de datos simulados
+├── docker-compose.yml  # Orquestación de servicios
+└── README.md           # Esta documentación
 ```
 
----
+## Getting Started
 
-## Puesta en Marcha
-
-Sigue estos pasos para configurar y ejecutar el entorno de desarrollo local.
+Sigue estos pasos para levantar el entorno de desarrollo local.
 
 ### Prerrequisitos
 
--   [Node.js](https://nodejs.org/) (v18+ recomendado)
--   [Bun](https://bun.sh/) (o `npm`/`yarn` si lo prefieres)
--   [Docker](https://www.docker.com/get-started) y Docker Compose
--   [Python](https://www.python.org/downloads/) (v3.9+ recomendado)
+- **Docker y Docker Compose**: [Instrucciones de instalación](https://docs.docker.com/get-docker/)
+- **Ollama**: Debes instalar Ollama en tu máquina anfitriona. [Instrucciones de instalación](https://ollama.com/).
+- **Git**
 
-### 1. Configuración del Backend
+### Instalación y Ejecución
 
-El backend se ejecuta como un conjunto de contenedores Docker.
-
-1.  **Navega al directorio raíz del proyecto.**
-2.  **Inicia los servicios de Docker Compose:**
+1.  **Clonar el repositorio:**
     ```bash
-    docker-compose up -d --build
+    git clone <URL_DEL_REPOSITORIO>
+    cd robotica
     ```
-    Este comando construirá las imágenes y levantará los contenedores para la API de FastAPI, la base de datos PostgreSQL y el servicio de Ollama.
 
-3.  **(Opcional) Poblar la base de datos con datos de prueba:**
-    -   Navega al directorio `fake-data`:
-        ```bash
-        cd fake-data
-        ```
-    -   Instala las dependencias:
-        ```bash
-        pip install -r requirements.txt
-        ```
-    -   Ejecuta el script para generar datos:
-        ```bash
-        python main.py
-        ```
-
-### 2. Configuración del Frontend
-
-La aplicación móvil se ejecuta usando el CLI de Expo.
-
-1.  **Navega al directorio de la aplicación móvil:**
+2.  **Preparar Ollama (en la máquina anfitriona):**
+    El backend espera que Ollama esté sirviendo un modelo. Abre una terminal separada y ejecuta:
     ```bash
-    cd robotica-app
+    # Descarga el modelo si no lo tienes
+    ollama pull gemma3:4b
+
+    # Inicia el servidor de Ollama (se ejecutará en segundo plano)
+    ollama serve
     ```
-2.  **Instala las dependencias:**
+    Puedes verificar que Ollama funciona visitando `http://localhost:11434` en tu navegador.
+
+3.  **Iniciar el Generador de Datos Falsos:**
+    Para que la API principal pueda obtener datos, el simulador debe estar en ejecución. Abre otra terminal:
     ```bash
-    bun install
+    cd fake-data
+    pip install -r requirements.txt
+    python main.py
     ```
-3.  **Inicia el servidor de desarrollo de Expo:**
+    El generador estará disponible en `http://localhost:8080`.
+
+4.  **Iniciar los servicios principales con Docker Compose:**
+    Desde el directorio raíz del proyecto (`/robotica`), ejecuta:
     ```bash
-    bun start
+    docker-compose up --build
     ```
-    Esto abrirá el Metro Bundler. Puedes escanear el código QR con la aplicación Expo Go en tu dispositivo móvil (iOS o Android) o ejecutar la aplicación en un emulador (`a` para Android, `i` para iOS).
+    Esto construirá y levantará los contenedores para la **API de análisis** y la **aplicación de Expo**.
 
-### Verificación
+### Acceso a los Servicios
 
--   La API del backend debería estar disponible en `http://localhost:8000/docs`.
--   La aplicación móvil debería conectarse a la API local automáticamente. La configuración de la URL de la API se encuentra en `robotica-app/constants/Api.ts`.
+- **API de Análisis**: `http://localhost:8000`
+- **Documentación Interactiva de la API**: `http://localhost:8000/docs`
+- **Aplicación Móvil (Expo)**: Escanea el código QR que aparece en la terminal de Docker con la aplicación Expo Go en tu teléfono.
+- **Generador de Datos Falsos**: `http://localhost:8080/datos`
 
----
+## API Documentation
 
-## Uso
+La documentación detallada de cada endpoint, incluyendo ejemplos de peticiones y respuestas, se encuentra en el siguiente archivo:
 
-### Backend API
+[**Ver Documentación de la API](./data-analysis/API_DOCUMENTATION.md)**]
 
-La API de `data-analysis` expone varios endpoints para gestionar los datos:
+## Testing
 
--   `GET /api/v1/sensors`: Obtiene los últimos datos de los sensores.
--   `GET /api/v1/sensors/history`: Obtiene un historial de lecturas de sensores.
--   `POST /api/v1/analysis`: Envía datos para ser analizados por el modelo de IA (Ollama).
--   `GET /api/v1/analysis/history`: Obtiene un historial de los análisis realizados.
+El proyecto incluye tests para garantizar la calidad y el rendimiento. Para ejecutar el test de rendimiento de la base de datos:
 
-La documentación interactiva de la API (generada por Swagger UI) está disponible en `http://localhost:8000/docs` cuando el servicio está en ejecución.
-
-### Aplicación Móvil
-
-La aplicación `robotica-app` tiene las siguientes pestañas principales:
-
--   **Sensores:** Muestra los datos más recientes de los sensores.
--   **Análisis:** Permite al usuario seleccionar un modelo de IA, enviar los datos actuales para análisis y ver el resultado.
--   **Configuración:** Opciones para configurar la aplicación.
-
----
-
-## Contribuciones
-
-Las contribuciones son bienvenidas. Por favor, abre un issue para discutir cambios importantes o envía un pull request con tus mejoras.
-
-## Licencia
-
-Este proyecto está bajo la Licencia MIT. Consulta el archivo `LICENSE` para más detalles.
+```bash
+cd data-analysis
+python3 -m unittest app/db/test_db_performance.py
+```

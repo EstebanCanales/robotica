@@ -22,8 +22,9 @@ class DBManager:
         """
         self.db_path = db_path or os.path.join(os.getenv("DATA_DIR", "data"), "sensores.db")
         
-        # Asegurar que el directorio existe
-        os.makedirs(os.path.dirname(self.db_path), exist_ok=True)
+        # No crear directorios si es una base de datos en memoria
+        if self.db_path != ":memory:":
+            os.makedirs(os.path.dirname(self.db_path), exist_ok=True)
         
         # Inicializar la conexión con check_same_thread=False para permitir su uso en diferentes threads
         self.conn = sqlite3.connect(self.db_path, check_same_thread=False)
@@ -42,8 +43,9 @@ class DBManager:
     def setup_database(self):
         """Configurar la base de datos."""
         try:
-            # Asegurarse de que existe la carpeta de datos
-            os.makedirs(os.path.dirname(self.db_path), exist_ok=True)
+            # No crear directorios si es una base de datos en memoria
+            if self.db_path != ":memory:":
+                os.makedirs(os.path.dirname(self.db_path), exist_ok=True)
             
             cursor = self.conn.cursor()
             
@@ -64,6 +66,11 @@ class DBManager:
                     timestamp TEXT NOT NULL,
                     FOREIGN KEY (data_id) REFERENCES sensor_data (id)
                 )
+            ''')
+            
+            # Crear índice para optimizar búsquedas por data_id
+            cursor.execute('''
+                CREATE INDEX IF NOT EXISTS idx_analysis_data_id ON analysis_results (data_id)
             ''')
             
             self.conn.commit()
